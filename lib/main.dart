@@ -2,6 +2,7 @@ import 'dart:io'; // ⬅️ 추가
 import 'package:flutter/material.dart';
 import 'screens/home_screen.dart';
 import 'notification_service.dart';
+import 'utils/app_colors.dart'; // ✅ 앱 전체 테마 추가
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
@@ -30,7 +31,24 @@ class DailyOneMinuteApp extends StatelessWidget {
     return MaterialApp(
       title: '하루1분',
       theme: ThemeData(
-        primarySwatch: Colors.blue,
+        scaffoldBackgroundColor: AppColors.background,
+        primaryColor: AppColors.primary,
+        colorScheme: ColorScheme.fromSwatch().copyWith(
+          secondary: AppColors.accent,
+        ),
+        textTheme: const TextTheme(
+          bodyMedium: TextStyle(color: AppColors.textDark),
+        ),
+        elevatedButtonTheme: ElevatedButtonThemeData(
+          style: ElevatedButton.styleFrom(
+            backgroundColor: AppColors.primary,
+            foregroundColor: Colors.white,
+            shape: RoundedRectangleBorder(
+              borderRadius: BorderRadius.circular(12),
+            ),
+            padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 12),
+          ),
+        ),
       ),
       home: const HomeScreen(),
     );

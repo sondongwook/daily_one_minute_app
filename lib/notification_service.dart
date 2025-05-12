@@ -57,7 +57,7 @@ class NotificationService {
 
   static tz.TZDateTime _nextInstanceOfEightAM() {
     final now = tz.TZDateTime.now(tz.local);
-    final scheduled = tz.TZDateTime(tz.local, now.year, now.month, now.day, 8);
+    final scheduled = tz.TZDateTime(tz.local, now.year, now.month, now.day, 8); // 아침 8시 알람
     return now.isBefore(scheduled) ? scheduled : scheduled.add(const Duration(days: 1));
   }
 }
