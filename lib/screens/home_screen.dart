@@ -8,6 +8,17 @@ class HomeScreen extends StatelessWidget {
   const HomeScreen({super.key});
 
   @override
+  void initState() {
+    super.initState();
+    WidgetsBinding.instance.addPostFrameCallback((_) async {
+      final trivia = await TriviaLoader.loadTodayTrivia();
+      if (trivia != null) {
+        context.read<TriviaProvider>().setTodayTrivia(trivia);
+      }
+    });
+  }
+
+  @override
   Widget build(BuildContext context) {
     return Scaffold(
       body: SafeArea(
