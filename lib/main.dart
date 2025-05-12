@@ -3,6 +3,8 @@ import 'package:flutter/material.dart';
 import 'screens/home_screen.dart';
 import 'notification_service.dart';
 import 'utils/app_colors.dart'; // ✅ 앱 전체 테마 추가
+import 'package:provider/provider.dart';
+import 'providers/trivia_provider.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
@@ -20,7 +22,14 @@ void main() async {
     print('🛑 시뮬레이터 환경 - 알림 예약 생략');
   }
 
-  runApp(const DailyOneMinuteApp());
+  runApp(
+    MultiProvider(
+      providers: [
+        ChangeNotifierProvider(create: (_) => TriviaProvider()),
+      ],
+      child: const DailyOneMinuteApp(),
+    ),
+  );
 }
 
 class DailyOneMinuteApp extends StatelessWidget {

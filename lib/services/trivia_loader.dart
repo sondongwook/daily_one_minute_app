@@ -20,9 +20,8 @@ class TriviaLoader {
 
       if (todayData != null) {
         return Trivia(
-          id: todayStr,
-          title: todayData['title'],
-          description: todayData['description'],
+          date: todayStr,
+          content: todayData['description'], // 또는 title, content 합쳐도 가능
         );
       }
     }

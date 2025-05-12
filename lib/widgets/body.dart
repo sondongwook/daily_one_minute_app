@@ -1,9 +1,10 @@
 import 'package:flutter/material.dart';
-import 'package:shared_preferences/shared_preferences.dart';
 import 'package:intl/intl.dart';
 import 'package:share_plus/share_plus.dart'; // ✅ 공유 기능 추가
 import 'package:google_fonts/google_fonts.dart'; // ✅ 폰트 기능 추가
-import '../data/sample_trivia.dart';
+// import 'package:shared_preferences/shared_preferences.dart';
+// import '../data/sample_trivia.dart';
+import '../services/trivia_loader.dart'; // ✅ TriviaLoader로 대체
 import '../models/trivia.dart';
 
 
@@ -24,38 +25,11 @@ class _BodyState extends State<Body> {
   }
 
   Future<void> loadTrivia() async {
-    final prefs = await SharedPreferences.getInstance();
-    final today = DateFormat('yyyy-MM-dd').format(DateTime.now());
-
-    final savedDate = prefs.getString('lastShownDate');
-    final savedTrivia = prefs.getString('lastTrivia');
-
-    String triviaText;
-
-    if (savedDate == today && savedTrivia != null) {
-        triviaText = savedTrivia;
-    } else {
-        final trivia = sampleTriviaList.firstWhere(
-        (t) => t.date == today,
-        orElse: () => Trivia(date: today, content: '오늘의 Trivia가 아직 준비되지 않았어요.'),
-        );
-        triviaText = trivia.content;
-
-        await prefs.setString('lastShownDate', today);
-        await prefs.setString('lastTrivia', trivia.content);
-    }
-
-    // ✅ 히스토리 저장은 항상 수행 (중복 저장 방지는 선택)
-    List<String> history = prefs.getStringList('triviaHistory') ?? [];
-
-    final newEntry = '$today|$triviaText';
-    if (!history.contains(newEntry)) {
-        history.add(newEntry);
-        await prefs.setStringList('triviaHistory', history);
-    }
+    final trivia = await TriviaLoader.loadTodayTrivia();
+    final triviaText = trivia?.content ?? '오늘의 Trivia가 아직 준비되지 않았어요.';
 
     setState(() {
-        todayTrivia = triviaText;
+      todayTrivia = triviaText;
     });
   }
 
