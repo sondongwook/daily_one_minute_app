@@ -1,4 +1,8 @@
-<manifest xmlns:android="http://schemas.android.com/apk/res/android">
+<manifest xmlns:android="http://schemas.android.com/apk/res/android"
+    package="com.appdev1016.daily_one_minute_app">
+
+    <!-- 광고 ID 사용을 위한 권한 (Android 13 이상 필수) -->
+    <uses-permission android:name="com.google.android.gms.permission.AD_ID"/>
 
     <!-- 알람기능 추가 -->
     <uses-permission android:name="android.permission.POST_NOTIFICATIONS"/>
