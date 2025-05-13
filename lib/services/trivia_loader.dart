@@ -1,4 +1,3 @@
-// lib/services/trivia_loader.dart
 import 'dart:convert';
 import 'package:http/http.dart' as http;
 import '../models/trivia.dart';
@@ -6,28 +5,20 @@ import '../models/trivia.dart';
 class TriviaLoader {
   static Future<Trivia?> loadTodayTrivia() async {
     final today = DateTime.now();
-    final todayStr = '${today.year}-${_pad(today.month)}-${_pad(today.day)}';
+    final todayStr = '${today.year}-${today.month.toString().padLeft(2, '0')}-${today.day.toString().padLeft(2, '0')}';
 
-    final url = Uri.parse('https://sondongwook.github.io/daily_one_minute_app/daily_trivia.json'); // 여기에 실제 주소 입력
-    final response = await http.get(url);
+    const url = 'https://sondongwook.github.io/daily_one_minute_app/daily_trivia.json';
 
-    if (response.statusCode == 200) {
-      final List<dynamic> data = json.decode(response.body);
-      final todayData = data.firstWhere(
-        (item) => item['date'] == todayStr,
-        orElse: () => null,
-      );
-
-      if (todayData != null) {
-        return Trivia(
-          date: todayStr,
-          content: todayData['description'], // 또는 title, content 합쳐도 가능
-        );
+    try {
+      final response = await http.get(Uri.parse(url));
+      if (response.statusCode == 200) {
+        final List<dynamic> list = jsonDecode(response.body);
+        final trivia = list.firstWhere((item) => item['date'] == todayStr, orElse: () => null);
+        if (trivia != null) return Trivia.fromJson(trivia);
       }
+    } catch (e) {
+      print('Trivia 로딩 실패: $e');
     }
-
     return null;
   }
-
-  static String _pad(int n) => n.toString().padLeft(2, '0');
 }

@@ -1,9 +1,10 @@
 import 'package:flutter/material.dart';
 import 'package:shared_preferences/shared_preferences.dart';
-import 'package:intl/intl.dart';
-import '../data/sample_quiz.dart';
 import '../models/quiz.dart';
-import 'quiz_result_screen.dart';
+import '../models/quiz_result.dart';
+import '../services/quiz_storage.dart';
+import '../screens/quiz_result_page.dart';
+
 
 class QuizScreen extends StatefulWidget {
   const QuizScreen({super.key});
@@ -13,161 +14,107 @@ class QuizScreen extends StatefulWidget {
 }
 
 class _QuizScreenState extends State<QuizScreen> {
-  int currentIndex = 0;
-  int? selectedIndex;
-  bool isAnswered = false;
-  int _correctCount = 0;
+  Quiz? quiz;
+  String? selectedOption;
+  bool hasAnswered = false;
 
-  Quiz get currentQuiz => sampleQuiz[currentIndex];
-
-  void selectOption(int index) {
-    if (isAnswered) return;
-
-    final isCorrect = index == currentQuiz.correctIndex;
-
-    if (isCorrect) {
-      _correctCount++; // ✅ 정답 개수 카운트
-    }
-
-    updateQuizStats(isCorrect); // ✅ 통계 업데이트
-
-    setState(() {
-      selectedIndex = index;
-      isAnswered = true;
-    });
+  @override
+  void didChangeDependencies() {
+    super.didChangeDependencies();
+    quiz = ModalRoute.of(context)?.settings.arguments as Quiz?;
   }
 
-  void goToNext() async {
-    final prefs = await SharedPreferences.getInstance();
-    final today = DateFormat('yyyyMMdd').format(DateTime.now());
+  void _onOptionSelected(String option) async {
+    if (hasAnswered || quiz == null) return;
 
-    // 오늘 푼 기록 저장 (하루 1회 제한용)
-    await prefs.setString('lastQuizDate', today);
+    setState(() {
+      selectedOption = option;
+      hasAnswered = true;
+    });
 
-    // ✅ 오늘 푼 문제의 정답 여부 저장
-    final todayKey = 'quizResult_$today';
-    final isCorrect = selectedIndex != null && selectedIndex == currentQuiz.correctIndex;
-    await prefs.setString(todayKey, isCorrect ? 'correct' : 'wrong');
-
-    final total = sampleQuiz.length;
-    final correct = _correctCount;
-
-    Navigator.pushReplacement(
-      context,
-      MaterialPageRoute(
-        builder: (_) => QuizResultScreen(
-          totalQuestions: total,
-          correctAnswers: correct,
-        ),
-      ),
+    final result = QuizResult(
+      date: DateTime.now(),
+      question: quiz!.question,
+      options: quiz!.options,
+      selectedAnswer: option,
+      correctAnswer: quiz!.answer,
+      isCorrect: option == quiz!.answer,
     );
+
+    await saveQuizResult(result);
+    
+    // ✅ 퀴즈 날짜 저장
+    final prefs = await SharedPreferences.getInstance();
+    final today = DateTime.now();
+    final todayStr = '${today.year}-${today.month.toString().padLeft(2, '0')}-${today.day.toString().padLeft(2, '0')}';
+    await prefs.setString('lastQuizDate', todayStr);
+
+    Future.delayed(const Duration(milliseconds: 600), () {
+      Navigator.pushReplacement(
+        context,
+        MaterialPageRoute(
+          builder: (_) => QuizResultPage(
+            selectedOption: option,
+            quiz: quiz,
+          ),
+        ),
+      );
+    });
   }
 
   @override
   Widget build(BuildContext context) {
-    return WillPopScope(
-      onWillPop: () async {
-        // 답안 선택 후에는 결과 화면으로 강제 이동
-        if (selectedIndex != null) {
-          final prefs = await SharedPreferences.getInstance();
-          final today = DateFormat('yyyyMMdd').format(DateTime.now());
-          final todayKey = 'quizResult_$today';
-          final isCorrect = selectedIndex == currentQuiz.correctIndex;
-          await prefs.setString(todayKey, isCorrect ? 'correct' : 'wrong');
-          await prefs.setString('lastQuizDate', today);
+    if (quiz == null) {
+      return const Scaffold(
+        body: Center(child: CircularProgressIndicator()),
+      );
+    }
 
-          final total = sampleQuiz.length;
-          final correct = _correctCount;
-
-          Navigator.pushReplacement(
-            context,
-            MaterialPageRoute(
-              builder: (_) => QuizResultScreen(
-                totalQuestions: total,
-                correctAnswers: correct,
-              ),
+    return Scaffold(
+      appBar: AppBar(title: const Text('오늘의 퀴즈')),
+      body: Padding(
+        padding: const EdgeInsets.all(24.0),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Text(
+              quiz!.question,
+              style: const TextStyle(fontSize: 22, fontWeight: FontWeight.bold),
             ),
-          );
-          return false;
-        }
-        return true;
-      },
-      child: Scaffold(
-        appBar: AppBar(title: const Text('오늘의 퀴즈')),
-        body: Padding(
-          padding: const EdgeInsets.all(16.0),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Text(
-                'Q. ${currentQuiz.question}',
-                style: Theme.of(context).textTheme.titleLarge,
-              ),
-              const SizedBox(height: 20),
-              ...List.generate(currentQuiz.options.length, (index) {
-                final isCorrect = index == currentQuiz.correctIndex;
-                final isSelected = index == selectedIndex;
+            const SizedBox(height: 24),
+            ...quiz!.options.map((option) {
+              final isCorrect = option == quiz!.answer;
+              final isSelected = option == selectedOption;
 
-                Color optionColor() {
-                  if (!isAnswered) return Colors.grey[200]!;
-                  if (isCorrect) return Colors.green;
-                  if (isSelected && !isCorrect) return Colors.red;
-                  return Colors.grey[200]!;
+              Color? color;
+              if (hasAnswered) {
+                if (isSelected && isCorrect) {
+                  color = Colors.green;
+                } else if (isSelected && !isCorrect) {
+                  color = Colors.red;
+                } else if (!isSelected && isCorrect) {
+                  color = Colors.green.withOpacity(0.4);
+                } else {
+                  color = Colors.grey.shade300;
                 }
+              }
 
-                return GestureDetector(
-                  onTap: () => selectOption(index),
-                  child: Container(
-                    margin: const EdgeInsets.symmetric(vertical: 6),
-                    padding: const EdgeInsets.all(12),
-                    decoration: BoxDecoration(
-                      color: optionColor(),
-                      borderRadius: BorderRadius.circular(10),
-                      border: Border.all(color: Colors.grey.shade400),
-                    ),
-                    child: Text(currentQuiz.options[index]),
+              return Container(
+                margin: const EdgeInsets.symmetric(vertical: 8),
+                width: double.infinity,
+                child: ElevatedButton(
+                  onPressed: () => _onOptionSelected(option),
+                  style: ElevatedButton.styleFrom(
+                    backgroundColor: color,
+                    padding: const EdgeInsets.symmetric(vertical: 16),
                   ),
-                );
-              }),
-              const SizedBox(height: 20),
-              if (isAnswered && currentQuiz.explanation != null)
-                Text(
-                  '해설: ${currentQuiz.explanation}',
-                  style: const TextStyle(color: Colors.black54),
+                  child: Text(option, style: const TextStyle(fontSize: 18)),
                 ),
-              const Spacer(),
-              if (isAnswered)
-                ElevatedButton(
-                  onPressed: goToNext,
-                  child: Text(
-                    currentIndex < sampleQuiz.length - 1 ? '다음 문제' : '결과 화면으로 이동',
-                  ),
-                ),
-            ],
-          ),
+              );
+            }).toList(),
+          ],
         ),
       ),
     );
-  }
-}
-
-// 오늘만 한 문제
-Future<bool> canPlayTodayQuiz() async {
-  final prefs = await SharedPreferences.getInstance();
-  final today = DateFormat('yyyyMMdd').format(DateTime.now());
-  final lastDate = prefs.getString('lastQuizDate');
-
-  return lastDate != today; // 오늘 푼 적 없으면 true
-}
-
-// 통계 저장 로직 만들기
-Future<void> updateQuizStats(bool isCorrect) async {
-  final prefs = await SharedPreferences.getInstance();
-  final totalAttempts = prefs.getInt('totalAttempts') ?? 0;
-  final correctAnswers = prefs.getInt('correctAnswers') ?? 0;
-
-  await prefs.setInt('totalAttempts', totalAttempts + 1);
-  if (isCorrect) {
-    await prefs.setInt('correctAnswers', correctAnswers + 1);
   }
 }

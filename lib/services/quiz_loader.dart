@@ -7,10 +7,10 @@ class QuizLoader {
     final today = DateTime.now();
     final todayStr = '${today.year}-${today.month.toString().padLeft(2, '0')}-${today.day.toString().padLeft(2, '0')}';
 
-    const jsonUrl = 'https://sondongwook.github.io/daily_one_minute_app/daily_quiz.json';
+    const url = 'https://sondongwook.github.io/daily_one_minute_app/daily_quiz.json';
 
     try {
-      final response = await http.get(Uri.parse(jsonUrl));
+      final response = await http.get(Uri.parse(url));
       if (response.statusCode == 200) {
         final Map<String, dynamic> data = jsonDecode(response.body);
         if (data.containsKey(todayStr)) {
@@ -18,7 +18,7 @@ class QuizLoader {
         }
       }
     } catch (e) {
-      print('퀴즈 불러오기 실패: $e');
+      print('Quiz 로딩 실패: $e');
     }
     return null;
   }
