@@ -6,10 +6,13 @@ class Footer extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Container(
-      padding: const EdgeInsets.all(16),
+      height: 56,
+      width: double.infinity,
+      color: Colors.black.withOpacity(0.05),
+      alignment: Alignment.center,
       child: const Text(
-        '© 하루1분, 2025',
-        style: TextStyle(fontSize: 12, color: Colors.grey),
+        '📢 광고 배너 영역',
+        style: TextStyle(color: Colors.white70),
       ),
     );
   }
