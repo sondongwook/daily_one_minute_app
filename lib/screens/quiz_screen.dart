@@ -1,4 +1,6 @@
 import 'package:flutter/material.dart';
+import 'package:shared_preferences/shared_preferences.dart';
+import 'package:intl/intl.dart';
 import '../data/sample_quiz.dart';
 import '../models/quiz.dart';
 
@@ -25,7 +27,7 @@ class _QuizScreenState extends State<QuizScreen> {
     });
   }
 
-  void goToNext() {
+  void goToNext() async {
     if (currentIndex < sampleQuiz.length - 1) {
       setState(() {
         currentIndex++;
@@ -33,6 +35,10 @@ class _QuizScreenState extends State<QuizScreen> {
         isAnswered = false;
       });
     } else {
+      final prefs = await SharedPreferences.getInstance();
+      final today = DateFormat('yyyyMMdd').format(DateTime.now());
+      await prefs.setString('lastQuizDate', today); // ✅ 저장
+
       Navigator.pop(context);
     }
   }
@@ -95,4 +101,12 @@ class _QuizScreenState extends State<QuizScreen> {
       ),
     );
   }
+}
+
+Future<bool> canPlayTodayQuiz() async {
+  final prefs = await SharedPreferences.getInstance();
+  final today = DateFormat('yyyyMMdd').format(DateTime.now());
+  final lastDate = prefs.getString('lastQuizDate');
+
+  return lastDate != today; // 오늘 푼 적 없으면 true
 }

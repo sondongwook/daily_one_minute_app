@@ -66,13 +66,31 @@ class _BodyState extends State<Body> {
           ),
           const SizedBox(height: 20),
           ElevatedButton(
-            onPressed: () {
+            onPressed: () async {
+              final allowed = await canPlayTodayQuiz();
+              if (!allowed) {
+                showDialog(
+                  context: context,
+                  builder: (_) => AlertDialog(
+                    title: const Text('오늘 퀴즈 완료'),
+                    content: const Text('오늘은 이미 퀴즈를 풀었어요! 내일 다시 도전해 주세요.'),
+                    actions: [
+                      TextButton(
+                        onPressed: () => Navigator.pop(context),
+                        child: const Text('확인'),
+                      ),
+                    ],
+                  ),
+                );
+                return;
+              }
+
               Navigator.push(
                 context,
                 MaterialPageRoute(builder: (context) => const QuizScreen()),
               );
             },
-            child: const Text('오늘의 퀴즈 풀기'),
+            child: const Text('오늘의 퀴즈'),
           ),
         ],
       ),
