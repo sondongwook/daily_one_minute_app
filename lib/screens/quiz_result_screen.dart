@@ -1,4 +1,7 @@
 import 'package:flutter/material.dart';
+import 'package:shared_preferences/shared_preferences.dart';
+import 'dart:convert';
+import '../models/quiz_result.dart';
 
 class QuizResultScreen extends StatelessWidget {
   final int totalQuestions;
@@ -35,5 +38,12 @@ class QuizResultScreen extends StatelessWidget {
         ),
       ),
     );
+  }
+
+  Future<void> saveQuizResult(QuizResult result) async {
+    final prefs = await SharedPreferences.getInstance();
+    final List<String> existing = prefs.getStringList('quiz_results') ?? [];
+    existing.add(jsonEncode(result.toJson()));
+    await prefs.setStringList('quiz_results', existing);
   }
 }

@@ -1,18 +1,29 @@
 class Trivia {
   final String date;
-  final String content;
+  final String question;
+  final List<String> options;
+  final String answer;
 
-  Trivia({required this.date, required this.content});
+  Trivia({
+    required this.date,
+    required this.question,
+    required this.options,
+    required this.answer,
+  });
 
   factory Trivia.fromJson(Map<String, dynamic> json) {
     return Trivia(
       date: json['date'],
-      content: json['content'],
+      question: json['question'],
+      options: List<String>.from(json['options']),
+      answer: json['answer'],
     );
   }
 
   Map<String, dynamic> toJson() => {
         'date': date,
-        'content': content,
+        'question': question,
+        'options': options,
+        'answer': answer,
       };
 }

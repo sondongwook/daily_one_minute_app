@@ -2,16 +2,15 @@ import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
 import 'package:share_plus/share_plus.dart'; // ✅ 공유 기능 추가
 import 'package:google_fonts/google_fonts.dart'; // ✅ 폰트 기능 추가
-// import 'package:shared_preferences/shared_preferences.dart';
-// import '../data/sample_trivia.dart';
 import '../services/trivia_loader.dart'; // ✅ TriviaLoader로 대체
 import '../models/trivia.dart';
 import '../screens/quiz_screen.dart';
 import '../screens/quiz_stats_screen.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import '../screens/quiz_history_screen.dart';
-
-
+import '../pages/quiz_history_page.dart';
+import '../models/quiz_result.dart';
+import '../services/quiz_storage.dart';
 
 class Body extends StatefulWidget {
   const Body({super.key});
@@ -22,6 +21,7 @@ class Body extends StatefulWidget {
 
 class _BodyState extends State<Body> {
   String? todayTrivia;
+  Trivia? triviaData;
 
   @override
   void initState() {
@@ -35,6 +35,7 @@ class _BodyState extends State<Body> {
 
     setState(() {
       todayTrivia = triviaText;
+      triviaData = trivia;
     });
   }
 
@@ -63,7 +64,7 @@ class _BodyState extends State<Body> {
             onPressed: todayTrivia == null
                 ? null
                 : () {
-                    Share.share('오늘의 Trivia 🤓\n\n$todayTrivia\n\n하루 1분 상식 앱에서 가져왔어요!');
+                    Share.share('오늘의 Trivia 🧓\n\n$todayTrivia\n\n하루 1분 상식 앱에서 가져왔어요!');
                   },
             icon: const Icon(Icons.share),
             label: const Text('공유하기'),
@@ -89,6 +90,19 @@ class _BodyState extends State<Body> {
                 return;
               }
 
+              // ✅ 퀴즈 결과 저장 처리 추가 (오늘 퀴즈 시작 전 저장)
+              if (triviaData != null) {
+                final result = QuizResult(
+                  date: DateTime.now(),
+                  question: triviaData!.question,
+                  options: triviaData!.options,
+                  selectedAnswer: '', // 아직 선택 전
+                  correctAnswer: triviaData!.answer,
+                  isCorrect: false, // 정답 여부는 결과 페이지에서 갱신 가능
+                );
+                await saveQuizResult(result);
+              }
+
               Navigator.push(
                 context,
                 MaterialPageRoute(builder: (context) => const QuizScreen()),
@@ -112,7 +126,13 @@ class _BodyState extends State<Body> {
                 MaterialPageRoute(builder: (context) => const QuizHistoryScreen()),
               );
             },
-            child: const Text('📅 최근 퀴즈 기록 보기'),
+            child: const Text('🗕 최근 퀴즈 기록 보기'),
+          ),
+          ElevatedButton(
+            onPressed: () {
+              Navigator.push(context, MaterialPageRoute(builder: (_) => QuizHistoryPage()));
+            },
+            child: Text('퀴즈 기록 보기'),
           ),
           ElevatedButton(
             onPressed: () async {
