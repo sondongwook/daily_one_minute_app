@@ -3,7 +3,9 @@ import 'package:intl/intl.dart';
 import 'package:share_plus/share_plus.dart';
 import 'package:google_fonts/google_fonts.dart';
 import '../services/trivia_loader.dart';
+import '../services/quiz_loader.dart';
 import '../models/trivia.dart';
+import '../models/quiz.dart';
 import '../screens/quiz_screen.dart';
 import '../screens/quiz_stats_screen.dart';
 import 'package:shared_preferences/shared_preferences.dart';
@@ -92,6 +94,7 @@ class _BodyState extends State<Body> {
           ElevatedButton(
             onPressed: () async {
               final allowed = await canPlayTodayQuiz();
+              print('반환값 확인 Can play today quiz: $allowed');
               if (!allowed) {
                 showDialog(
                   context: context,
@@ -109,9 +112,30 @@ class _BodyState extends State<Body> {
                 return;
               }
 
+              final quiz = await QuizLoader.loadTodayQuiz();
+              if (quiz == null) {
+                showDialog(
+                  context: context,
+                  builder: (_) => AlertDialog(
+                    title: const Text('퀴즈 없음'),
+                    content: const Text('오늘의 퀴즈가 아직 준비되지 않았어요.'),
+                    actions: [
+                      TextButton(
+                        onPressed: () => Navigator.pop(context),
+                        child: const Text('확인'),
+                      ),
+                    ],
+                  ),
+                );
+                return;
+              }
+
               Navigator.push(
                 context,
-                MaterialPageRoute(builder: (context) => const QuizScreen()),
+                MaterialPageRoute(
+                  builder: (context) => const QuizScreen(),
+                  settings: RouteSettings(arguments: quiz),
+                ),
               );
             },
             child: const Text('오늘의 퀴즈'),
