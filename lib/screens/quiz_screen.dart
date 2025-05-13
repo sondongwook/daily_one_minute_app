@@ -1,7 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:intl/intl.dart';
-import 'package:shared_preferences/shared_preferences.dart';
 import '../data/sample_quiz.dart';
 import '../models/quiz.dart';
 import 'quiz_result_screen.dart';
@@ -66,58 +65,86 @@ class _QuizScreenState extends State<QuizScreen> {
 
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
-      appBar: AppBar(title: const Text('오늘의 퀴즈')),
-      body: Padding(
-        padding: const EdgeInsets.all(16.0),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Text(
-              'Q. ${currentQuiz.question}',
-              style: Theme.of(context).textTheme.titleLarge,
+    return WillPopScope(
+      onWillPop: () async {
+        // 답안 선택 후에는 결과 화면으로 강제 이동
+        if (selectedIndex != null) {
+          final prefs = await SharedPreferences.getInstance();
+          final today = DateFormat('yyyyMMdd').format(DateTime.now());
+          final todayKey = 'quizResult_$today';
+          final isCorrect = selectedIndex == currentQuiz.correctIndex;
+          await prefs.setString(todayKey, isCorrect ? 'correct' : 'wrong');
+          await prefs.setString('lastQuizDate', today);
+
+          final total = sampleQuiz.length;
+          final correct = _correctCount;
+
+          Navigator.pushReplacement(
+            context,
+            MaterialPageRoute(
+              builder: (_) => QuizResultScreen(
+                totalQuestions: total,
+                correctAnswers: correct,
+              ),
             ),
-            const SizedBox(height: 20),
-            ...List.generate(currentQuiz.options.length, (index) {
-              final isCorrect = index == currentQuiz.correctIndex;
-              final isSelected = index == selectedIndex;
-
-              Color optionColor() {
-                if (!isAnswered) return Colors.grey[200]!;
-                if (isCorrect) return Colors.green;
-                if (isSelected && !isCorrect) return Colors.red;
-                return Colors.grey[200]!;
-              }
-
-              return GestureDetector(
-                onTap: () => selectOption(index),
-                child: Container(
-                  margin: const EdgeInsets.symmetric(vertical: 6),
-                  padding: const EdgeInsets.all(12),
-                  decoration: BoxDecoration(
-                    color: optionColor(),
-                    borderRadius: BorderRadius.circular(10),
-                    border: Border.all(color: Colors.grey.shade400),
-                  ),
-                  child: Text(currentQuiz.options[index]),
-                ),
-              );
-            }),
-            const SizedBox(height: 20),
-            if (isAnswered && currentQuiz.explanation != null)
+          );
+          return false;
+        }
+        return true;
+      },
+      child: Scaffold(
+        appBar: AppBar(title: const Text('오늘의 퀴즈')),
+        body: Padding(
+          padding: const EdgeInsets.all(16.0),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
               Text(
-                '해설: ${currentQuiz.explanation}',
-                style: const TextStyle(color: Colors.black54),
+                'Q. ${currentQuiz.question}',
+                style: Theme.of(context).textTheme.titleLarge,
               ),
-            const Spacer(),
-            if (isAnswered)
-              ElevatedButton(
-                onPressed: goToNext,
-                child: Text(
-                  currentIndex < sampleQuiz.length - 1 ? '다음 문제' : '홈으로 돌아가기',
+              const SizedBox(height: 20),
+              ...List.generate(currentQuiz.options.length, (index) {
+                final isCorrect = index == currentQuiz.correctIndex;
+                final isSelected = index == selectedIndex;
+
+                Color optionColor() {
+                  if (!isAnswered) return Colors.grey[200]!;
+                  if (isCorrect) return Colors.green;
+                  if (isSelected && !isCorrect) return Colors.red;
+                  return Colors.grey[200]!;
+                }
+
+                return GestureDetector(
+                  onTap: () => selectOption(index),
+                  child: Container(
+                    margin: const EdgeInsets.symmetric(vertical: 6),
+                    padding: const EdgeInsets.all(12),
+                    decoration: BoxDecoration(
+                      color: optionColor(),
+                      borderRadius: BorderRadius.circular(10),
+                      border: Border.all(color: Colors.grey.shade400),
+                    ),
+                    child: Text(currentQuiz.options[index]),
+                  ),
+                );
+              }),
+              const SizedBox(height: 20),
+              if (isAnswered && currentQuiz.explanation != null)
+                Text(
+                  '해설: ${currentQuiz.explanation}',
+                  style: const TextStyle(color: Colors.black54),
                 ),
-              ),
-          ],
+              const Spacer(),
+              if (isAnswered)
+                ElevatedButton(
+                  onPressed: goToNext,
+                  child: Text(
+                    currentIndex < sampleQuiz.length - 1 ? '다음 문제' : '결과 화면으로 이동',
+                  ),
+                ),
+            ],
+          ),
         ),
       ),
     );
