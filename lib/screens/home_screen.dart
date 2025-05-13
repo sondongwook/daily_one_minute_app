@@ -6,6 +6,7 @@ import '../widgets/footer.dart';
 import '../notification_service.dart'; // ✅ 추가
 import '../services/trivia_loader.dart';
 import '../providers/trivia_provider.dart';
+import 'quiz_screen.dart';
 
 class HomeScreen extends StatefulWidget {
   const HomeScreen({super.key});

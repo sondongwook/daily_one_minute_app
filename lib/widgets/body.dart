@@ -6,6 +6,7 @@ import 'package:google_fonts/google_fonts.dart'; // ✅ 폰트 기능 추가
 // import '../data/sample_trivia.dart';
 import '../services/trivia_loader.dart'; // ✅ TriviaLoader로 대체
 import '../models/trivia.dart';
+import '../screens/quiz_screen.dart';
 
 
 class Body extends StatefulWidget {
@@ -62,6 +63,16 @@ class _BodyState extends State<Body> {
                   },
             icon: const Icon(Icons.share),
             label: const Text('공유하기'),
+          ),
+          const SizedBox(height: 20),
+          ElevatedButton(
+            onPressed: () {
+              Navigator.push(
+                context,
+                MaterialPageRoute(builder: (context) => const QuizScreen()),
+              );
+            },
+            child: const Text('오늘의 퀴즈 풀기'),
           ),
         ],
       ),
