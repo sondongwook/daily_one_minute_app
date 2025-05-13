@@ -1,8 +1,10 @@
 import 'package:flutter/material.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:intl/intl.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 import '../data/sample_quiz.dart';
 import '../models/quiz.dart';
+import 'quiz_result_screen.dart';
 
 class QuizScreen extends StatefulWidget {
   const QuizScreen({super.key});
@@ -15,11 +17,20 @@ class _QuizScreenState extends State<QuizScreen> {
   int currentIndex = 0;
   int? selectedIndex;
   bool isAnswered = false;
+  int _correctCount = 0;
 
   Quiz get currentQuiz => sampleQuiz[currentIndex];
 
   void selectOption(int index) {
     if (isAnswered) return;
+
+    final isCorrect = index == currentQuiz.correctIndex;
+
+    if (isCorrect) {
+      _correctCount++; // ✅ 정답 개수 카운트
+    }
+
+    updateQuizStats(isCorrect); // ✅ 통계 업데이트
 
     setState(() {
       selectedIndex = index;
@@ -28,19 +39,29 @@ class _QuizScreenState extends State<QuizScreen> {
   }
 
   void goToNext() async {
-    if (currentIndex < sampleQuiz.length - 1) {
-      setState(() {
-        currentIndex++;
-        selectedIndex = null;
-        isAnswered = false;
-      });
-    } else {
-      final prefs = await SharedPreferences.getInstance();
-      final today = DateFormat('yyyyMMdd').format(DateTime.now());
-      await prefs.setString('lastQuizDate', today); // ✅ 저장
+    final prefs = await SharedPreferences.getInstance();
+    final today = DateFormat('yyyyMMdd').format(DateTime.now());
 
-      Navigator.pop(context);
-    }
+    // 오늘 푼 기록 저장 (하루 1회 제한용)
+    await prefs.setString('lastQuizDate', today);
+
+    // ✅ 오늘 푼 문제의 정답 여부 저장
+    final todayKey = 'quizResult_$today';
+    final isCorrect = selectedIndex != null && selectedIndex == currentQuiz.correctIndex;
+    await prefs.setString(todayKey, isCorrect ? 'correct' : 'wrong');
+
+    final total = sampleQuiz.length;
+    final correct = _correctCount;
+
+    Navigator.pushReplacement(
+      context,
+      MaterialPageRoute(
+        builder: (_) => QuizResultScreen(
+          totalQuestions: total,
+          correctAnswers: correct,
+        ),
+      ),
+    );
   }
 
   @override
@@ -103,10 +124,23 @@ class _QuizScreenState extends State<QuizScreen> {
   }
 }
 
+// 오늘만 한 문제
 Future<bool> canPlayTodayQuiz() async {
   final prefs = await SharedPreferences.getInstance();
   final today = DateFormat('yyyyMMdd').format(DateTime.now());
   final lastDate = prefs.getString('lastQuizDate');
 
   return lastDate != today; // 오늘 푼 적 없으면 true
+}
+
+// 통계 저장 로직 만들기
+Future<void> updateQuizStats(bool isCorrect) async {
+  final prefs = await SharedPreferences.getInstance();
+  final totalAttempts = prefs.getInt('totalAttempts') ?? 0;
+  final correctAnswers = prefs.getInt('correctAnswers') ?? 0;
+
+  await prefs.setInt('totalAttempts', totalAttempts + 1);
+  if (isCorrect) {
+    await prefs.setInt('correctAnswers', correctAnswers + 1);
+  }
 }

@@ -1,5 +1,6 @@
 import 'dart:io'; // ⬅️ 추가
 import 'package:flutter/material.dart';
+import 'package:intl/date_symbol_data_local.dart';
 import 'screens/home_screen.dart';
 import 'notification_service.dart';
 import 'utils/app_colors.dart'; // ✅ 앱 전체 테마 추가
@@ -8,6 +9,8 @@ import 'providers/trivia_provider.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
+  //await initializeDateFormatting('ko_KR', null); // ✅ 한국어 로케일 초기화
+  await initializeDateFormatting(); // 모든 로케일 초기화
 
   await NotificationService.init();
 

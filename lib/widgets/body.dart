@@ -7,6 +7,10 @@ import 'package:google_fonts/google_fonts.dart'; // ✅ 폰트 기능 추가
 import '../services/trivia_loader.dart'; // ✅ TriviaLoader로 대체
 import '../models/trivia.dart';
 import '../screens/quiz_screen.dart';
+import '../screens/quiz_stats_screen.dart';
+import 'package:shared_preferences/shared_preferences.dart';
+import '../screens/quiz_history_screen.dart';
+
 
 
 class Body extends StatefulWidget {
@@ -91,6 +95,34 @@ class _BodyState extends State<Body> {
               );
             },
             child: const Text('오늘의 퀴즈'),
+          ),
+          ElevatedButton(
+            onPressed: () {
+              Navigator.push(
+                context,
+                MaterialPageRoute(builder: (context) => const QuizStatsScreen()),
+              );
+            },
+            child: const Text('퀴즈 통계 보기'),
+          ),
+          ElevatedButton(
+            onPressed: () {
+              Navigator.push(
+                context,
+                MaterialPageRoute(builder: (context) => const QuizHistoryScreen()),
+              );
+            },
+            child: const Text('📅 최근 퀴즈 기록 보기'),
+          ),
+          ElevatedButton(
+            onPressed: () async {
+              final prefs = await SharedPreferences.getInstance();
+              await prefs.remove('lastQuizDate');
+              ScaffoldMessenger.of(context).showSnackBar(
+                const SnackBar(content: Text('lastQuizDate 초기화됨')),
+              );
+            },
+            child: const Text('🧪 퀴즈 날짜 초기화 (테스트용)'),
           ),
         ],
       ),
