@@ -4,6 +4,7 @@ import '../models/quiz.dart';
 import '../models/quiz_result.dart';
 import '../services/quiz_storage.dart';
 import '../screens/quiz_result_page.dart';
+import '../models/quiz_session_result.dart'; // 추가
 
 
 class QuizScreen extends StatefulWidget {
@@ -17,6 +18,13 @@ class _QuizScreenState extends State<QuizScreen> {
   Quiz? quiz;
   String? selectedOption;
   bool hasAnswered = false;
+  late final Stopwatch stopwatch;
+
+  @override
+  void initState() {
+    super.initState();
+    stopwatch = Stopwatch()..start();
+  }
 
   @override
   void didChangeDependencies() {
@@ -50,13 +58,20 @@ class _QuizScreenState extends State<QuizScreen> {
     await prefs.setString('lastQuizDate', todayStr);
 
     Future.delayed(const Duration(milliseconds: 600), () {
+      final sessionResult = QuizSessionResult(
+        date: DateTime.now(),
+        topic: '오늘의 퀴즈', // 또는 quiz!.category 등이 있다면 그걸로
+        correctCount: option == quiz!.answer ? 1 : 0,
+        totalQuestions: 1,
+        //duration: const Duration(seconds: 10), // 추후 stopwatch로 시간 측정 가능
+        duration: stopwatch.elapsed, // ✅ 실제 경과 시간
+        results: [result],
+      );
+
       Navigator.pushReplacement(
         context,
         MaterialPageRoute(
-          builder: (_) => QuizResultPage(
-            selectedOption: option,
-            quiz: quiz,
-          ),
+          builder: (_) => QuizResultPage(sessionResult: sessionResult),
         ),
       );
     });
