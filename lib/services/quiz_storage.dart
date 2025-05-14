@@ -8,3 +8,10 @@ Future<void> saveQuizResult(QuizResult result) async {
   data.add(jsonEncode(result.toJson()));
   await prefs.setStringList('quiz_results', data);
 }
+
+// ✅ 전체 결과 불러오기 함수
+Future<List<QuizResult>> getAllResults() async {
+  final prefs = await SharedPreferences.getInstance();
+  final data = prefs.getStringList('quiz_results') ?? [];
+  return data.map((e) => QuizResult.fromJson(jsonDecode(e))).toList();
+}

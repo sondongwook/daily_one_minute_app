@@ -1,3 +1,4 @@
+import 'package:flutter/material.dart';
 import 'dart:io'; // ⬅️ 추가
 import 'package:flutter/material.dart';
 import 'package:intl/date_symbol_data_local.dart';
@@ -6,6 +7,8 @@ import 'notification_service.dart';
 import 'utils/app_colors.dart'; // ✅ 앱 전체 테마 추가
 import 'package:provider/provider.dart';
 import 'providers/trivia_provider.dart';
+
+final RouteObserver<ModalRoute<void>> routeObserver = RouteObserver<ModalRoute<void>>();
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
@@ -41,6 +44,7 @@ class DailyOneMinuteApp extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return MaterialApp(
+      navigatorObservers: [routeObserver],
       title: '하루1분',
       theme: ThemeData(
         scaffoldBackgroundColor: AppColors.background,

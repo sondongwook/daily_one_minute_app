@@ -11,6 +11,7 @@ import 'package:shared_preferences/shared_preferences.dart';
 import '../models/quiz_result.dart';
 import '../services/quiz_storage.dart';
 import '../pages/quiz_history_page.dart';
+import '../../main.dart'; // ✅ routeObserver 사용하려면 반드시 필요
 
 class Body extends StatefulWidget {
   const Body({super.key});
@@ -19,13 +20,33 @@ class Body extends StatefulWidget {
   State<Body> createState() => _BodyState();
 }
 
-class _BodyState extends State<Body> {
+class _BodyState extends State<Body> with RouteAware {
   Trivia? triviaData;
+  double _accuracy = 0.0;
+
+
+  @override
+  void didChangeDependencies() {
+    super.didChangeDependencies();
+    routeObserver.subscribe(this, ModalRoute.of(context)!);
+  }
+
+  @override
+  void dispose() {
+    routeObserver.unsubscribe(this);
+    super.dispose();
+  }
+
+  @override
+  void didPopNext() {
+    loadAccuracy(); // 퀴즈 후 돌아오면 정답률 다시 로딩
+  }
 
   @override
   void initState() {
     super.initState();
     loadTrivia();
+    loadAccuracy();
   }
 
   Future<void> loadTrivia() async {
@@ -35,13 +56,43 @@ class _BodyState extends State<Body> {
     });
   }
 
+  Future<void> loadAccuracy() async {
+    final results = await getAllResults();
+    final total = results.length;
+    final correct = results.where((r) => r.isCorrect).length;
+
+    setState(() {
+      _accuracy = total > 0 ? correct / total * 100 : 0.0;
+    });
+  }
+
+  Widget _buildAccuracyBadge() {
+    return Container(
+      margin: const EdgeInsets.only(bottom: 16),
+      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+      decoration: BoxDecoration(
+        color: Colors.blue.shade50,
+        borderRadius: BorderRadius.circular(12),
+      ),
+      child: Row(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          const Icon(Icons.bar_chart, color: Colors.blue),
+          const SizedBox(width: 8),
+          Text(
+            '오늘까지 정답률: ${_accuracy.toStringAsFixed(1)}%',
+            style: const TextStyle(fontSize: 16, color: Colors.black87),
+          ),
+        ],
+      ),
+    );
+  }
+
   Future<bool> canPlayTodayQuiz() async {
     final prefs = await SharedPreferences.getInstance();
-    final lastPlayedDate = prefs.getString('lastQuizDate');
-
     final today = DateTime.now();
     final todayStr = '${today.year}-${today.month.toString().padLeft(2, '0')}-${today.day.toString().padLeft(2, '0')}';
-
+    final lastPlayedDate = prefs.getString('lastQuizDate');
     return lastPlayedDate != todayStr;
   }
 
@@ -66,6 +117,7 @@ class _BodyState extends State<Body> {
           Column(
             crossAxisAlignment: CrossAxisAlignment.center,
             children: [
+              _buildAccuracyBadge(), // ✅ 정답률 배지 삽입
               const Icon(Icons.lightbulb, size: 48, color: Colors.amber),
               const SizedBox(height: 16),
               Text(
@@ -109,7 +161,7 @@ class _BodyState extends State<Body> {
                 children: [
                   _buildIconButton(Icons.share, '공유', () {
                     Share.share(
-                      '오늘의 Trivia 🤓\n\n${triviaData!.title}\n\n${triviaData!.description}\n\n하루 1분 상식 앱에서 가져왔어요!',
+                      '오늘의 Trivia 🤓\n\n\${triviaData!.title}\n\n\${triviaData!.description}\n\n하루 1분 상식 앱에서 가져왔어요!',
                     );
                   }),
                   _buildIconButton(Icons.quiz, '퀴즈', () async {
