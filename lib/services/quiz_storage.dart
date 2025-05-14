@@ -9,7 +9,7 @@ Future<void> saveQuizResult(QuizResult result) async {
   await prefs.setStringList('quiz_results', data);
 }
 
-// ✅ 전체 결과 불러오기 함수
+// ✅ 전체 결과 불러오기
 Future<List<QuizResult>> getAllResults() async {
   final prefs = await SharedPreferences.getInstance();
   final data = prefs.getStringList('quiz_results') ?? [];

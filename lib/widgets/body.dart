@@ -11,7 +11,7 @@ import 'package:shared_preferences/shared_preferences.dart';
 import '../models/quiz_result.dart';
 import '../services/quiz_storage.dart';
 import '../pages/quiz_history_page.dart';
-import '../../main.dart'; // ✅ routeObserver 사용하려면 반드시 필요
+import '../../main.dart'; // ✅ routeObserver 사용하려면 반드시 필요함
 
 class Body extends StatefulWidget {
   const Body({super.key});
