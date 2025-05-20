@@ -5,6 +5,7 @@ class QuizResult {
   final String selectedAnswer;
   final String correctAnswer;
   final bool isCorrect;
+  final Duration duration;
 
   QuizResult({
     required this.date,
@@ -13,6 +14,7 @@ class QuizResult {
     required this.selectedAnswer,
     required this.correctAnswer,
     required this.isCorrect,
+    required this.duration,
   });
 
   Map<String, dynamic> toJson() => {
@@ -22,6 +24,7 @@ class QuizResult {
     'selectedAnswer': selectedAnswer,
     'correctAnswer': correctAnswer,
     'isCorrect': isCorrect,
+    'duration': duration.inMilliseconds,
   };
 
   factory QuizResult.fromJson(Map<String, dynamic> json) => QuizResult(
@@ -31,5 +34,6 @@ class QuizResult {
     selectedAnswer: json['selectedAnswer'],
     correctAnswer: json['correctAnswer'],
     isCorrect: json['isCorrect'],
+    duration: Duration(milliseconds: json['duration']),
   );
 }

@@ -47,6 +47,7 @@ class _QuizScreenState extends State<QuizScreen> {
       selectedAnswer: option,
       correctAnswer: quiz!.answer,
       isCorrect: option == quiz!.answer,
+      duration: stopwatch.elapsed, // ✅ 여기 추가!
     );
 
     await saveQuizResult(result);
