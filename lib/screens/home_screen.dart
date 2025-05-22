@@ -9,6 +9,7 @@ import '../providers/trivia_provider.dart';
 import 'quiz_screen.dart';
 import '../sample/sample_quiz_screen_remote.dart'; // ✅ 샘플 퀴즈 화면 import
 
+
 class HomeScreen extends StatefulWidget {
   const HomeScreen({super.key});
 

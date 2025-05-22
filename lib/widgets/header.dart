@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
-import '../screens/settings_screen.dart';
+import '../pages/settings/settings_page.dart';
 
 class Header extends StatelessWidget {
   const Header({super.key});
@@ -49,7 +49,7 @@ class Header extends StatelessWidget {
             onPressed: () {
               Navigator.push(
                 context,
-                MaterialPageRoute(builder: (_) => const SettingsScreen()),
+                MaterialPageRoute(builder: (_) => const SettingsPage()),
               );
             },
             tooltip: '설정',

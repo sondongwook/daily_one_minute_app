@@ -8,11 +8,18 @@
     <uses-permission android:name="android.permission.POST_NOTIFICATIONS"/>
     
     <application
-        android:label="daily_one_minute_app"
+        android:label="하루 1분 - 매일 상식, 지식, 퀴즈 한 개씩"
         android:name="${applicationName}"
         android:icon="@mipmap/ic_launcher">
+
+    <!-- ✅ AdMob 앱 ID 추가 -->
+    <meta-data
+        android:name="com.google.android.gms.ads.APPLICATION_ID"
+        android:value="ca-app-pub-7522497069462678~5187283426"/>
+
         <activity
             android:name=".MainActivity"
+            android:screenOrientation="portrait"
             android:exported="true"
             android:launchMode="singleTop"
             android:taskAffinity=""
